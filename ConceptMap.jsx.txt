@@ -1,0 +1,386 @@
+import React, { useState, useMemo } from 'react';
+import {
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ResponsiveContainer,
+  Legend,
+  Tooltip,
+} from 'recharts';
+import {
+  Map,
+  Activity,
+  GitCommit,
+  BookOpen,
+  Users,
+  HeartPulse,
+  Shield,
+  Brain,
+  CheckSquare,
+  Square,
+  Info,
+} from 'lucide-react';
+
+const ConceptMap = () => {
+  // 定義七大核心能力 (SIRIPPP)
+  const competencies = [
+    { subject: 'S: Systems (制度體系)', full: 'Systems-based Practice', icon: <GitCommit size={16} /> },
+    { subject: 'I: Interpersonal (溝通技巧)', full: 'Interpersonal & Communication', icon: <Users size={16} /> },
+    { subject: 'R: Reflection (反思學習)', full: 'Practice-based Learning', icon: <Brain size={16} /> },
+    { subject: 'I: Info/Knowledge (醫學知識)', full: 'Medical Knowledge', icon: <BookOpen size={16} /> },
+    { subject: 'P: Professionalism (專業素養)', full: 'Professionalism', icon: <Shield size={16} /> },
+    { subject: 'P: Patient Care (病人照護)', full: 'Patient Care', icon: <HeartPulse size={16} /> },
+    { subject: 'P: Partners (跨域團隊)', full: 'Inter-professional Practice', icon: <Activity size={16} /> },
+  ];
+
+  // 根據台灣呼吸治療全聯會發布之公版 11 項 EPA 更新
+  const epaScenarios = [
+    {
+      id: 'epa1',
+      name: 'EPA 1: 提供病人藥物吸入治療照護',
+      color: '#3b82f6',
+      data: [
+        { subject: 'S: Systems (制度體系)', A: 40 },
+        { subject: 'I: Interpersonal (溝通技巧)', A: 60 },
+        { subject: 'R: Reflection (反思學習)', A: 40 },
+        { subject: 'I: Info/Knowledge (醫學知識)', A: 80 },
+        { subject: 'P: Professionalism (專業素養)', A: 70 },
+        { subject: 'P: Patient Care (病人照護)', A: 85 },
+        { subject: 'P: Partners (跨域團隊)', A: 40 },
+      ],
+    },
+    {
+      id: 'epa2',
+      name: 'EPA 2: 提供病人痰液清除照護',
+      color: '#06b6d4',
+      data: [
+        { subject: 'S: Systems (制度體系)', A: 45 },
+        { subject: 'I: Interpersonal (溝通技巧)', A: 50 },
+        { subject: 'R: Reflection (反思學習)', A: 40 },
+        { subject: 'I: Info/Knowledge (醫學知識)', A: 75 },
+        { subject: 'P: Professionalism (專業素養)', A: 75 },
+        { subject: 'P: Patient Care (病人照護)', A: 90 },
+        { subject: 'P: Partners (跨域團隊)', A: 50 },
+      ],
+    },
+    {
+      id: 'epa3',
+      name: 'EPA 3: 提供胸腹手術病人肺擴張治療照護',
+      color: '#14b8a6',
+      data: [
+        { subject: 'S: Systems (制度體系)', A: 50 },
+        { subject: 'I: Interpersonal (溝通技巧)', A: 75 },
+        { subject: 'R: Reflection (反思學習)', A: 50 },
+        { subject: 'I: Info/Knowledge (醫學知識)', A: 80 },
+        { subject: 'P: Professionalism (專業素養)', A: 70 },
+        { subject: 'P: Patient Care (病人照護)', A: 85 },
+        { subject: 'P: Partners (跨域團隊)', A: 60 },
+      ],
+    },
+    {
+      id: 'epa4',
+      name: 'EPA 4: 提供病人呼吸功能改善處置',
+      color: '#10b981',
+      data: [
+        { subject: 'S: Systems (制度體系)', A: 40 },
+        { subject: 'I: Interpersonal (溝通技巧)', A: 85 },
+        { subject: 'R: Reflection (反思學習)', A: 60 },
+        { subject: 'I: Info/Knowledge (醫學知識)', A: 75 },
+        { subject: 'P: Professionalism (專業素養)', A: 80 },
+        { subject: 'P: Patient Care (病人照護)', A: 80 },
+        { subject: 'P: Partners (跨域團隊)', A: 50 },
+      ],
+    },
+    {
+      id: 'epa5',
+      name: 'EPA 5: 提供病人氧氣治療照護',
+      color: '#84cc16',
+      data: [
+        { subject: 'S: Systems (制度體系)', A: 60 },
+        { subject: 'I: Interpersonal (溝通技巧)', A: 50 },
+        { subject: 'R: Reflection (反思學習)', A: 40 },
+        { subject: 'I: Info/Knowledge (醫學知識)', A: 70 },
+        { subject: 'P: Professionalism (專業素養)', A: 70 },
+        { subject: 'P: Patient Care (病人照護)', A: 85 },
+        { subject: 'P: Partners (跨域團隊)', A: 40 },
+      ],
+    },
+    {
+      id: 'epa6',
+      name: 'EPA 6: 使用侵襲性呼吸器病人之初始設定及照護',
+      color: '#eab308',
+      data: [
+        { subject: 'S: Systems (制度體系)', A: 75 },
+        { subject: 'I: Interpersonal (溝通技巧)', A: 50 },
+        { subject: 'R: Reflection (反思學習)', A: 80 },
+        { subject: 'I: Info/Knowledge (醫學知識)', A: 95 },
+        { subject: 'P: Professionalism (專業素養)', A: 85 },
+        { subject: 'P: Patient Care (病人照護)', A: 95 },
+        { subject: 'P: Partners (跨域團隊)', A: 80 },
+      ],
+    },
+    {
+      id: 'epa7',
+      name: 'EPA 7: 呼吸窘迫病人之處置',
+      color: '#f97316',
+      data: [
+        { subject: 'S: Systems (制度體系)', A: 70 },
+        { subject: 'I: Interpersonal (溝通技巧)', A: 60 },
+        { subject: 'R: Reflection (反思學習)', A: 70 },
+        { subject: 'I: Info/Knowledge (醫學知識)', A: 95 },
+        { subject: 'P: Professionalism (專業素養)', A: 90 },
+        { subject: 'P: Patient Care (病人照護)', A: 100 },
+        { subject: 'P: Partners (跨域團隊)', A: 85 },
+      ],
+    },
+    {
+      id: 'epa8',
+      name: 'EPA 8: 使用呼吸器病人之緊急處置',
+      color: '#ef4444',
+      data: [
+        { subject: 'S: Systems (制度體系)', A: 80 },
+        { subject: 'I: Interpersonal (溝通技巧)', A: 70 },
+        { subject: 'R: Reflection (反思學習)', A: 60 },
+        { subject: 'I: Info/Knowledge (醫學知識)', A: 95 },
+        { subject: 'P: Professionalism (專業素養)', A: 90 },
+        { subject: 'P: Patient Care (病人照護)', A: 100 },
+        { subject: 'P: Partners (跨域團隊)', A: 90 },
+      ],
+    },
+    {
+      id: 'epa9',
+      name: 'EPA 9: 使用呼吸器病人之轉送照護',
+      color: '#d946ef',
+      data: [
+        { subject: 'S: Systems (制度體系)', A: 95 },
+        { subject: 'I: Interpersonal (溝通技巧)', A: 85 },
+        { subject: 'R: Reflection (反思學習)', A: 70 },
+        { subject: 'I: Info/Knowledge (醫學知識)', A: 80 },
+        { subject: 'P: Professionalism (專業素養)', A: 85 },
+        { subject: 'P: Patient Care (病人照護)', A: 90 },
+        { subject: 'P: Partners (跨域團隊)', A: 90 },
+      ],
+    },
+    {
+      id: 'epa10',
+      name: 'EPA 10: 使用侵襲性呼吸器病人之脫離照護',
+      color: '#8b5cf6',
+      data: [
+        { subject: 'S: Systems (制度體系)', A: 70 },
+        { subject: 'I: Interpersonal (溝通技巧)', A: 80 },
+        { subject: 'R: Reflection (反思學習)', A: 90 },
+        { subject: 'I: Info/Knowledge (醫學知識)', A: 95 },
+        { subject: 'P: Professionalism (專業素養)', A: 85 },
+        { subject: 'P: Patient Care (病人照護)', A: 90 },
+        { subject: 'P: Partners (跨域團隊)', A: 95 },
+      ],
+    },
+    {
+      id: 'epa11',
+      name: 'EPA 11: 移除病人氣管內管之照護',
+      color: '#64748b',
+      data: [
+        { subject: 'S: Systems (制度體系)', A: 65 },
+        { subject: 'I: Interpersonal (溝通技巧)', A: 75 },
+        { subject: 'R: Reflection (反思學習)', A: 70 },
+        { subject: 'I: Info/Knowledge (醫學知識)', A: 85 },
+        { subject: 'P: Professionalism (專業素養)', A: 85 },
+        { subject: 'P: Patient Care (病人照護)', A: 95 },
+        { subject: 'P: Partners (跨域團隊)', A: 70 },
+      ],
+    },
+  ];
+
+  // 預設選取一個較具代表性的 EPA (例如 EPA 6 呼吸器初始設定)
+  const [selectedEPAs, setSelectedEPAs] = useState([epaScenarios[5]]);
+
+  // 合併多個 EPA 的資料成為 Recharts 可以讀的格式
+  const chartData = useMemo(() => {
+    return competencies.map((comp) => {
+      const dataPoint = { subject: comp.subject };
+      selectedEPAs.forEach((epa) => {
+        const feature = epa.data.find((d) => d.subject === comp.subject);
+        if (feature) {
+          dataPoint[epa.id] = feature.A;
+        }
+      });
+      return dataPoint;
+    });
+  }, [selectedEPAs, competencies]);
+
+  const toggleEPA = (epa) => {
+    setSelectedEPAs((prev) => {
+      const exists = prev.find((item) => item.id === epa.id);
+      if (exists) {
+        if (prev.length === 1) return prev;
+        return prev.filter((item) => item.id !== epa.id);
+      } else {
+        return [...prev, epa];
+      }
+    });
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-2 md:p-6 font-sans text-slate-800">
+      {/* Header Section */}
+      <div className="max-w-7xl mx-auto mb-6 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+          <Map className="text-blue-600" />
+          CBME 概念導航：11項公版 EPA 任務圖譜
+        </h1>
+        <p className="text-slate-600 flex items-center gap-2">
+          <Info size={16} />
+          <span>
+            勾選右側選單可<strong>疊加顯示</strong>多個任務，觀察不同任務對 SIRIPPP 核心能力的需求差異。
+          </span>
+        </p>
+      </div>
+
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left Column: Visual Chart */}
+        <div className="lg:col-span-8 bg-white p-4 rounded-xl shadow-lg border border-slate-200 flex flex-col items-center min-h-[500px]">
+          <div className="w-full flex justify-between items-center mb-2 px-4">
+            <h2 className="text-lg font-bold text-slate-700 flex items-center gap-2">
+              <Activity className="text-blue-500" />
+              能力雷達視圖
+            </h2>
+            <div className="text-xs text-slate-400">已顯示 {selectedEPAs.length} 個任務</div>
+          </div>
+
+          <div className="w-full h-[450px] md:h-[600px] relative">
+            {/* Chart Background Labels */}
+            <div className="absolute top-2 left-2 text-xs text-slate-400 font-mono pointer-events-none z-10">
+              MAP: CBME LANDSCAPE
+            </div>
+
+            <ResponsiveContainer width="100%" height="100%">
+              <RadarChart cx="50%" cy="50%" outerRadius="70%" data={chartData}>
+                <PolarGrid gridType="polygon" />
+                <PolarAngleAxis
+                  dataKey="subject"
+                  tick={{ fill: '#475569', fontSize: 12, fontWeight: 600 }}
+                />
+                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+
+                {selectedEPAs.map((epa) => (
+                  <Radar
+                    key={epa.id}
+                    name={epa.name}
+                    dataKey={epa.id}
+                    stroke={epa.color}
+                    strokeWidth={3}
+                    fill={epa.color}
+                    fillOpacity={selectedEPAs.length > 1 ? 0.1 : 0.4}
+                  />
+                ))}
+
+                <Tooltip />
+                <Legend />
+              </RadarChart>
+            </ResponsiveContainer>
+
+            {/* Metaphor Explanation Overlay */}
+            <div className="absolute bottom-4 right-4 bg-white/95 p-3 rounded-lg border border-slate-200 text-xs shadow-md max-w-[200px] z-10">
+              <div className="font-bold mb-2 text-slate-900 border-b pb-1">教學比喻對照:</div>
+              <ul className="space-y-2">
+                <li className="flex items-start gap-2">
+                  <div className="mt-0.5 w-3 h-3 bg-slate-200 rounded-sm border border-slate-400 flex-shrink-0" />
+                  <span className="text-slate-600 leading-tight">
+                    <strong>地圖</strong> (Background)
+                    <br />
+                    CBME 勝任力導向教育
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <div className="mt-0.5 w-3 h-3 bg-slate-800 rounded-full flex-shrink-0" />
+                  <span className="text-slate-600 leading-tight">
+                    <strong>主幹道</strong> (Axes)
+                    <br />
+                    SIRIPPP 七大核心能力
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <div className="mt-0.5 w-3 h-3 border-2 border-blue-500 rounded-full flex-shrink-0" />
+                  <span className="text-slate-600 leading-tight">
+                    <strong>任務路線</strong> (Shape)
+                    <br />
+                    EPA 可信賴專業活動
+                  </span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Controls */}
+        <div className="lg:col-span-4 flex flex-col gap-4">
+          {/* EPA Multi-Selection Control */}
+          <div className="bg-white p-5 rounded-xl shadow-md border border-slate-200 flex-1 overflow-y-auto max-h-[600px]">
+            <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2 sticky top-0 bg-white pb-2 border-b border-slate-100 z-10">
+              <GitCommit className="text-purple-600" />
+              EPA 任務清單 (可複選)
+            </h3>
+            <div className="space-y-2">
+              {epaScenarios.map((epa) => {
+                const isSelected = selectedEPAs.some((item) => item.id === epa.id);
+                return (
+                  <button
+                    key={epa.id}
+                    onClick={() => toggleEPA(epa)}
+                    className={`w-full text-left p-3 rounded-lg border transition-all duration-200 flex items-center gap-3 group ${
+                      isSelected
+                        ? 'bg-slate-50 border-slate-300 shadow-sm'
+                        : 'bg-white border-transparent hover:bg-slate-50'
+                    }`}
+                  >
+                    <div
+                      className={`flex-shrink-0 transition-colors ${
+                        isSelected
+                          ? 'text-blue-600'
+                          : 'text-slate-300 group-hover:text-slate-400'
+                      }`}
+                    >
+                      {isSelected ? <CheckSquare size={20} /> : <Square size={20} />}
+                    </div>
+
+                    <div className="flex-1">
+                      <div
+                        className="font-bold text-sm mb-0.5"
+                        style={{ color: isSelected ? epa.color : '#475569' }}
+                      >
+                        {epa.name.split(':')[0]}
+                      </div>
+                    </div>
+
+                    {isSelected && (
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: epa.color }} />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* SIRIPPP Mini Legend */}
+          <div className="bg-slate-800 text-white p-4 rounded-xl shadow-md">
+            <div className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">
+              Core Competencies
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              {competencies.map((c, i) => (
+                <div key={i} className="flex items-center gap-1.5 opacity-80">
+                  <span className="text-blue-400">{c.icon}</span>
+                  <span>{c.subject.split(':')[0]}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ConceptMap;
