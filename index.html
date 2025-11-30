@@ -5,15 +5,17 @@
     <title>CBME × EPA 核心能力雷達圖</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!-- Tailwind：只是為了好看一點的排版 -->
+    <!-- Tailwind：排版用 -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Chart.js：用來畫雷達圖 -->
+    <!-- Chart.js：畫雷達圖 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body class="bg-slate-50">
     <div class="min-h-screen p-4 md:p-8 text-slate-800">
-      <div class="max-w-6xl mx-auto mb-6 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+      <div
+        class="max-w-6xl mx-auto mb-6 bg-white p-6 rounded-xl shadow-sm border border-slate-200"
+      >
         <h1 class="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
           CBME 概念導航：11項公版 EPA × SIRIPPP 核心能力雷達圖
         </h1>
@@ -31,8 +33,14 @@
             <h2 class="font-bold text-slate-700">能力雷達視圖（Radar Chart）</h2>
             <span id="selected-count" class="text-xs text-slate-400"></span>
           </div>
-          <div class="w-full h-[420px] md:h-[500px]">
-            <canvas id="epaRadarChart"></canvas>
+          <div class="w-full flex justify-center items-center">
+            <!-- 給 canvas 固定尺寸 + 邊框，方便確認位置 -->
+            <canvas
+              id="epaRadarChart"
+              width="600"
+              height="600"
+              style="border:1px solid #e5e7eb; background:#f9fafb;"
+            ></canvas>
           </div>
         </div>
 
@@ -60,6 +68,8 @@
     </div>
 
     <script>
+      console.log("EPA radar script loaded");
+
       // 七大核心能力 (SIRIPPP) — 新定義
       const competencies = [
         {
@@ -72,8 +82,7 @@
           full: "Interpersonal & Communication",
         },
         {
-          subject:
-            "R: Respiratory Care Knowledge (呼吸照護知識)",
+          subject: "R: Respiratory Care Knowledge (呼吸照護知識)",
           full: "Respiratory Care Knowledge",
         },
         {
@@ -96,5 +105,306 @@
         },
       ];
 
-      // 11 項 EPA 任務（已依新 SIRIPPP 重新分配）
-      const epaSc
+      // 11 項 EPA 任務（依新 SIRIPPP 分布）
+      const epaScenarios = [
+        {
+          id: "epa1",
+          name: "EPA 1: 提供病人藥物吸入治療照護",
+          color: "rgba(59,130,246,1)",
+          bg: "rgba(59,130,246,0.2)",
+          data: [
+            { subject: competencies[0].subject, A: 40 },
+            { subject: competencies[1].subject, A: 60 },
+            { subject: competencies[2].subject, A: 80 },
+            { subject: competencies[3].subject, A: 40 },
+            { subject: competencies[4].subject, A: 85 },
+            { subject: competencies[5].subject, A: 70 },
+            { subject: competencies[6].subject, A: 40 },
+          ],
+        },
+        {
+          id: "epa2",
+          name: "EPA 2: 提供病人痰液清除照護",
+          color: "rgba(6,182,212,1)",
+          bg: "rgba(6,182,212,0.2)",
+          data: [
+            { subject: competencies[0].subject, A: 45 },
+            { subject: competencies[1].subject, A: 50 },
+            { subject: competencies[2].subject, A: 75 },
+            { subject: competencies[3].subject, A: 50 },
+            { subject: competencies[4].subject, A: 90 },
+            { subject: competencies[5].subject, A: 75 },
+            { subject: competencies[6].subject, A: 40 },
+          ],
+        },
+        {
+          id: "epa3",
+          name: "EPA 3: 提供胸腹手術病人肺擴張治療照護",
+          color: "rgba(20,184,166,1)",
+          bg: "rgba(20,184,166,0.2)",
+          data: [
+            { subject: competencies[0].subject, A: 50 },
+            { subject: competencies[1].subject, A: 75 },
+            { subject: competencies[2].subject, A: 80 },
+            { subject: competencies[3].subject, A: 60 },
+            { subject: competencies[4].subject, A: 85 },
+            { subject: competencies[5].subject, A: 70 },
+            { subject: competencies[6].subject, A: 50 },
+          ],
+        },
+        {
+          id: "epa4",
+          name: "EPA 4: 提供病人呼吸功能改善處置",
+          color: "rgba(16,185,129,1)",
+          bg: "rgba(16,185,129,0.2)",
+          data: [
+            { subject: competencies[0].subject, A: 40 },
+            { subject: competencies[1].subject, A: 85 },
+            { subject: competencies[2].subject, A: 75 },
+            { subject: competencies[3].subject, A: 50 },
+            { subject: competencies[4].subject, A: 80 },
+            { subject: competencies[5].subject, A: 80 },
+            { subject: competencies[6].subject, A: 60 },
+          ],
+        },
+        {
+          id: "epa5",
+          name: "EPA 5: 提供病人氧氣治療照護",
+          color: "rgba(132,204,22,1)",
+          bg: "rgba(132,204,22,0.2)",
+          data: [
+            { subject: competencies[0].subject, A: 60 },
+            { subject: competencies[1].subject, A: 50 },
+            { subject: competencies[2].subject, A: 70 },
+            { subject: competencies[3].subject, A: 40 },
+            { subject: competencies[4].subject, A: 85 },
+            { subject: competencies[5].subject, A: 70 },
+            { subject: competencies[6].subject, A: 40 },
+          ],
+        },
+        {
+          id: "epa6",
+          name: "EPA 6: 使用侵襲性呼吸器病人之初始設定及照護",
+          color: "rgba(234,179,8,1)",
+          bg: "rgba(234,179,8,0.2)",
+          data: [
+            { subject: competencies[0].subject, A: 75 },
+            { subject: competencies[1].subject, A: 50 },
+            { subject: competencies[2].subject, A: 95 },
+            { subject: competencies[3].subject, A: 80 },
+            { subject: competencies[4].subject, A: 95 },
+            { subject: competencies[5].subject, A: 85 },
+            { subject: competencies[6].subject, A: 80 },
+          ],
+        },
+        {
+          id: "epa7",
+          name: "EPA 7: 呼吸窘迫病人之處置",
+          color: "rgba(249,115,22,1)",
+          bg: "rgba(249,115,22,0.2)",
+          data: [
+            { subject: competencies[0].subject, A: 70 },
+            { subject: competencies[1].subject, A: 60 },
+            { subject: competencies[2].subject, A: 95 },
+            { subject: competencies[3].subject, A: 85 },
+            { subject: competencies[4].subject, A: 100 },
+            { subject: competencies[5].subject, A: 90 },
+            { subject: competencies[6].subject, A: 70 },
+          ],
+        },
+        {
+          id: "epa8",
+          name: "EPA 8: 使用呼吸器病人之緊急處置",
+          color: "rgba(239,68,68,1)",
+          bg: "rgba(239,68,68,0.2)",
+          data: [
+            { subject: competencies[0].subject, A: 80 },
+            { subject: competencies[1].subject, A: 70 },
+            { subject: competencies[2].subject, A: 95 },
+            { subject: competencies[3].subject, A: 90 },
+            { subject: competencies[4].subject, A: 100 },
+            { subject: competencies[5].subject, A: 90 },
+            { subject: competencies[6].subject, A: 60 },
+          ],
+        },
+        {
+          id: "epa9",
+          name: "EPA 9: 使用呼吸器病人之轉送照護",
+          color: "rgba(217,70,239,1)",
+          bg: "rgba(217,70,239,0.2)",
+          data: [
+            { subject: competencies[0].subject, A: 95 },
+            { subject: competencies[1].subject, A: 85 },
+            { subject: competencies[2].subject, A: 80 },
+            { subject: competencies[3].subject, A: 90 },
+            { subject: competencies[4].subject, A: 90 },
+            { subject: competencies[5].subject, A: 85 },
+            { subject: competencies[6].subject, A: 70 },
+          ],
+        },
+        {
+          id: "epa10",
+          name: "EPA 10: 使用侵襲性呼吸器病人之脫離照護",
+          color: "rgba(139,92,246,1)",
+          bg: "rgba(139,92,246,0.2)",
+          data: [
+            { subject: competencies[0].subject, A: 70 },
+            { subject: competencies[1].subject, A: 80 },
+            { subject: competencies[2].subject, A: 95 },
+            { subject: competencies[3].subject, A: 95 },
+            { subject: competencies[4].subject, A: 90 },
+            { subject: competencies[5].subject, A: 85 },
+            { subject: competencies[6].subject, A: 90 },
+          ],
+        },
+        {
+          id: "epa11",
+          name: "EPA 11: 移除病人氣管內管之照護",
+          color: "rgba(100,116,139,1)",
+          bg: "rgba(100,116,139,0.2)",
+          data: [
+            { subject: competencies[0].subject, A: 65 },
+            { subject: competencies[1].subject, A: 75 },
+            { subject: competencies[2].subject, A: 85 },
+            { subject: competencies[3].subject, A: 70 },
+            { subject: competencies[4].subject, A: 95 },
+            { subject: competencies[5].subject, A: 85 },
+            { subject: competencies[6].subject, A: 70 },
+          ],
+        },
+      ];
+
+      // ----------- 初始化畫面與圖表 -------------- //
+
+      const labels = competencies.map((c) => c.subject);
+
+      const canvas = document.getElementById("epaRadarChart");
+      const ctx = canvas.getContext("2d");
+
+      console.log("Canvas element:", canvas);
+
+      let radarChart = new Chart(ctx, {
+        type: "radar",
+        data: {
+          labels,
+          datasets: [],
+        },
+        options: {
+          responsive: false, // 因為我們給了固定寬高
+          scales: {
+            r: {
+              min: 0,
+              max: 100,
+              ticks: { display: true, stepSize: 20 },
+              grid: { color: "rgba(148,163,184,0.3)" },
+              angleLines: { color: "rgba(148,163,184,0.6)" },
+            },
+          },
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: { font: { size: 11 } },
+            },
+            tooltip: {
+              callbacks: {
+                label(context) {
+                  return `${context.dataset.label}: ${context.formattedValue}`;
+                },
+              },
+            },
+          },
+        },
+      });
+
+      const epaListEl = document.getElementById("epa-list");
+      const selectedCountEl = document.getElementById("selected-count");
+
+      function renderEPACheckboxes() {
+        epaListEl.innerHTML = "";
+        epaScenarios.forEach((epa) => {
+          const wrapper = document.createElement("label");
+          wrapper.className =
+            "flex items-start gap-2 p-2 rounded-lg border cursor-pointer transition bg-white hover:bg-slate-50";
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.className = "mt-1";
+          if (epa.id === "epa6") checkbox.checked = true; // 預設 EPA6
+
+          checkbox.addEventListener("change", updateChartFromSelection);
+
+          const textBox = document.createElement("div");
+          textBox.className = "flex-1";
+
+          const title = document.createElement("div");
+          title.className = "font-bold text-sm";
+          title.style.color = epa.color;
+          title.textContent = epa.name.split(":")[0];
+
+          const subtitle = document.createElement("div");
+          subtitle.className = "text-xs text-slate-500";
+          subtitle.textContent = epa.name.split(":")[1];
+
+          textBox.appendChild(title);
+          textBox.appendChild(subtitle);
+
+          wrapper.appendChild(checkbox);
+          wrapper.appendChild(textBox);
+
+          epaListEl.appendChild(wrapper);
+
+          epa._checkbox = checkbox;
+        });
+      }
+
+      function updateChartFromSelection() {
+        const selected = epaScenarios.filter(
+          (epa) => epa._checkbox && epa._checkbox.checked
+        );
+
+        if (selected.length === 0) {
+          const epa6 = epaScenarios.find((e) => e.id === "epa6");
+          if (epa6 && epa6._checkbox) {
+            epa6._checkbox.checked = true;
+            return updateChartFromSelection();
+          }
+        }
+
+        const datasets = selected.map((epa) => {
+          const dataValues = labels.map((label) => {
+            const found = epa.data.find((d) => d.subject === label);
+            return found ? found.A : 0;
+          });
+          return {
+            label: epa.name,
+            data: dataValues,
+            borderColor: epa.color,
+            backgroundColor: epa.bg,
+            borderWidth: 2,
+            pointRadius: 3,
+          };
+        });
+
+        radarChart.data.datasets = datasets;
+        radarChart.update();
+
+        selectedCountEl.textContent = `已顯示 ${selected.length} 個 EPA 任務`;
+      }
+
+      // 顯示 SIRIPPP 說明
+      const siripppListEl = document.getElementById("sirippp-list");
+      competencies.forEach((c) => {
+        const li = document.createElement("li");
+        li.className = "flex gap-2";
+        const tag = c.subject.split(":")[0];
+        const desc = c.subject.split(":")[1];
+        li.innerHTML = `<span class="w-6 text-slate-300">${tag}：</span><span>${desc}</span>`;
+        siripppListEl.appendChild(li);
+      });
+
+      // 初始化畫面
+      renderEPACheckboxes();
+      updateChartFromSelection();
+    </script>
+  </body>
+</html>
